@@ -70,13 +70,24 @@ if arg_config("--use-system-libraries", !!ENV['RUGGED_USE_SYSTEM_LIBRARIES'])
 
   major = minor = nil
 
-  File.readlines(File.join(LIBGIT2_DIR, "include", "git2", "version.h")).each do |line|
-    if !major && (matches = line.match(/^#define LIBGIT2_VER_MAJOR\s+([0-9]+)$/))
+  # Determine which version.h to read for the compatibility check.
+  # Normally the vendored libgit2 source is present (it ships inside the .gem
+  # tarball from rubygems). However, when this gem is installed from a git
+  # source without submodules, the vendor directory won't exist. In that case
+  # fall back to the system-installed header found via pkg-config, which is the
+  # library we're actually going to link against anyway.
+  version_header = File.join(LIBGIT2_DIR, "include", "git2", "version.h")
+  unless File.exist?(version_header)
+    version_header = File.join(`pkg-config --variable=includedir libgit2`.strip, "git2", "version.h")
+  end
+  File.readlines(version_header).each do |line|
+    # Support both old (LIBGIT2_VER_MAJOR) and new (LIBGIT2_VERSION_MAJOR) header formats.
+    if !major && (matches = line.match(/^#define LIBGIT2_VER(?:SION)?_MAJOR\s+([0-9]+)$/))
       major = matches[1]
       next
     end
 
-    if !minor && (matches = line.match(/^#define LIBGIT2_VER_MINOR\s+([0-9]+)$/))
+    if !minor && (matches = line.match(/^#define LIBGIT2_VER(?:SION)?_MINOR\s+([0-9]+)$/))
       minor = matches[1]
       next
     end
@@ -84,8 +95,14 @@ if arg_config("--use-system-libraries", !!ENV['RUGGED_USE_SYSTEM_LIBRARIES'])
     break if major && minor
   end
 
+  # Support both old (LIBGIT2_VER_*) and new (LIBGIT2_VERSION_*) header formats.
   try_compile(<<-SRC) or abort "libgit2 version is not compatible, expected ~> #{major}.#{minor}.0"
 #include <git2/version.h>
+
+#ifndef LIBGIT2_VER_MAJOR
+#define LIBGIT2_VER_MAJOR LIBGIT2_VERSION_MAJOR
+#define LIBGIT2_VER_MINOR LIBGIT2_VERSION_MINOR
+#endif
 
 #if LIBGIT2_VER_MAJOR != #{major} || LIBGIT2_VER_MINOR != #{minor}
 #error libgit2 version is not compatible
