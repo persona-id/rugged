@@ -26,7 +26,7 @@ jobs:
     - name: Install macOS packages
       run: ./vendor/libgit2/ci/setup-osx-build.sh
     - name: Set up Ruby on macOS
-      uses: ruby/setup-ruby@v1
+      uses: ruby/setup-ruby@4c56a21280b36d862b5fc31348f463d60bdc55d5 # v1
       with:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true
@@ -53,7 +53,7 @@ jobs:
         sudo apt update
         sudo apt install -y cmake libssh2-1-dev openssh-client openssh-server
     - name: Set up Ruby on Linux
-      uses: ruby/setup-ruby@v1
+      uses: ruby/setup-ruby@4c56a21280b36d862b5fc31348f463d60bdc55d5 # v1
       with:
         ruby-version: ${{ matrix.ruby }}
         bundler-cache: true
