@@ -97,7 +97,8 @@ if arg_config("--use-system-libraries", !!ENV['RUGGED_USE_SYSTEM_LIBRARIES'])
 
   # Support both old (LIBGIT2_VER_*) and new (LIBGIT2_VERSION_*) header formats.
   try_compile(<<-SRC) or abort "libgit2 version is not compatible, expected ~> #{major}.#{minor}.0"
-#include <git2/version.h>
+#include <git2.h>
+
 
 #ifndef LIBGIT2_VER_MAJOR
 #define LIBGIT2_VER_MAJOR LIBGIT2_VERSION_MAJOR
